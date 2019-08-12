@@ -1,7 +1,7 @@
 # Statistical_Inference_Proj
 Repo containing materials related to completing the course project for the Coursera Statistical Inference course in the Data Science Specialization
 
-### Project Description
+### Project Description (copy and pasted from course website)
 The project consists of two parts:
 
 1. A simulation exercise.
