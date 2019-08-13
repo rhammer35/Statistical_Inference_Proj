@@ -1,5 +1,5 @@
 ---
-title: "Statistical_Inference_Project_Part_1"
+title: "Statistical Inference Project Part 1"
 author: "Ryan Hammer"
 output: pdf_document
 ---
@@ -7,30 +7,31 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE, results = "hide")
 ```
 ```{r packages, echo=FALSE}
-library(ggplot2)
+suppressWarnings(library(ggplot2))
 ```
 ## Project Overview
 
 Welcome to Part 1 of the course project in the Statistical Inference course that is part of the Data Science Specialization through Johns Hopkins University in Coursera. For this portion of the project, a simulation exercise will be performed in R to investigate the exponential probability distribution and compare it to the Central Limit Theorem. To do said comparison, we will view the simulated mean, variance, and distribution with the theoretical versions of those same three characteristics for a given lambda value.
 
 ### 1. Simulations
-To begin, we will need to run 1000 simulations of 40 exponential random variables. The assignment requires using a lambda value of 0.2. It should be noted that the exponential distribution is related to the geometric distribution, which is a measure of the number of binomial trials required to achieve a single success. The exponential distribution is the continuous version of the discrete geometric distribution.
-For the simulation, I will use the rexp() function to generate exponential random variables. I will use a for loop to create a matrix storing each simulation of 40 random exponentials to a single row for 1000 rows. That code follows.
+To begin, we will need to run 1000 simulations of 40 exponential random variables. The assignment requires using a lambda value of 0.2 for the randomized data, and then calculating the mean for each sample of size 40. The distribution of those sample means will then be used in the comparison with the Central Limit Theorem. It should be noted that the exponential distribution is related to the geometric distribution, which is a measure of the number of binomial trials required to achieve a single success. The exponential distribution is the continuous version of the discrete geometric distribution.
+For the simulation in R, I use the rexp() function to generate exponential random variables. I am also employing the set.seed() function to make my results reproducible. Then, I use a for() loop to create a matrix storing each simulation of 40 random exponentials to a single row for a total of 1000 rows. That code follows.
 
 ```{r simulation}
+set.seed(35)
 simdata <- matrix(data = NA, nrow = 1000, ncol = 40)
 for (i in 1:1000) {simdata[i, ] <- rexp(40, 0.2)}
 ```
 
 Here is a view of the first few rows and columns of the new simulated matrix:
 
-```{r data preview, results='asis'}
+```{r data preview, results='hold'}
 head(simdata[, 1:5])
 ```
 
-Next, I will take the mean and variance of each row of the matrix and store those values in vectors called "simmeans" and "simvars" respectively.
+Next, I take the mean and variance of each row of the matrix and store those values in vectors called "simmeans" and "simvars" respectively. These represent means and variances for each sample of 40 simulated random variables. The distribution of the means will become the focus of the analysis and comparison. I am storing the variances for later reference.
 
-```{r}
+```{r calculations}
 simmeans <- apply(simdata, 1, mean)
 simvars <- apply(simdata, 1, var)
 ```
