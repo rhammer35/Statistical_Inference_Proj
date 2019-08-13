@@ -4,9 +4,9 @@ author: "Ryan Hammer"
 output: pdf_document
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, results = "hide")
+knitr::opts_chunk$set(echo = FALSE, results = "hide")
 ```
-```{r packages, echo=FALSE}
+```{r packages}
 suppressWarnings(library(ggplot2))
 ```
 ## Project Overview
@@ -14,8 +14,8 @@ suppressWarnings(library(ggplot2))
 Welcome to Part 1 of the course project in the Statistical Inference course that is part of the Data Science Specialization through Johns Hopkins University in Coursera. For this portion of the project, a simulation exercise will be performed in R to investigate the exponential probability distribution and compare it to the Central Limit Theorem. To do said comparison, we will view the simulated mean, variance, and distribution with the theoretical versions of those same three characteristics for a given lambda value.
 
 ### 1. Simulations
-To begin, we will need to run 1000 simulations of 40 exponential random variables. The assignment requires using a lambda value of 0.2 for the randomized data, and then calculating the mean for each sample of size 40. The distribution of those sample means will then be used in the comparison with the Central Limit Theorem. It should be noted that the exponential distribution is related to the geometric distribution, which is a measure of the number of binomial trials required to achieve a single success. The exponential distribution is the continuous version of the discrete geometric distribution.
-For the simulation in R, I use the rexp() function to generate exponential random variables. I am also employing the set.seed() function to make my results reproducible. Then, I use a for() loop to create a matrix storing each simulation of 40 random exponentials to a single row for a total of 1000 rows. That code follows.
+To begin, we will need to run 1000 simulations of 40 exponential random variables. The assignment requires using a lambda ($\lambda$) value of 0.2 for the randomized data, and then calculating the mean for each sample of size 40. The distribution of those sample means will then be used in the comparison with the Central Limit Theorem. It should be noted that the exponential distribution is related to the geometric distribution, which is a measure of the number of binomial trials required to achieve a single success. The exponential distribution is the continuous version of the discrete geometric distribution.
+For the simulation in R, I use the rexp() function to generate exponential random variables. I am also employing the set.seed() function to make my results reproducible. Then, I use a for() loop to create a matrix storing each simulation of 40 random exponentials to a single row for a total of 1000 rows. The code for that, and all other R commands, can be found in the Appendix.
 
 ```{r simulation}
 set.seed(35)
@@ -23,9 +23,9 @@ simdata <- matrix(data = NA, nrow = 1000, ncol = 40)
 for (i in 1:1000) {simdata[i, ] <- rexp(40, 0.2)}
 ```
 
-Here is a view of the first few rows and columns of the new simulated matrix:
+Here is a view of the first few rows and columns of the resulting simulated matrix:
 
-```{r data preview, results='hold'}
+```{r data preview, results = 'hold'}
 head(simdata[, 1:5])
 ```
 
@@ -37,12 +37,49 @@ simvars <- apply(simdata, 1, var)
 ```
 
 
-## Including Plots
+### 2. Sample Mean vs. Theoretical Mean
 
-You can also embed plots, for example:
+The theoretical mean for an exponential distribution is equal to the value of 1/$\lambda$. As we are using a $\lambda$ value of 0.2, our theoretical mean, or $\mu$, is equal to 5. The sample mean is calculated by applying the mean function to the vector "simmeans", which contains the means for each simulation of 40 random exponential variables.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r sample mean, results = 'asis'}
+samplemean <- mean(simmeans)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+The sample mean of 4.988198 is extremely close to the theoretical mean of $\lambda$ = 5. This should not be surprising, as the Central Limit Theorem states that for a large number of samples, the distribution of sample means should be approximately normal with center at the population (or in this case, theoretical) mean. The histogram below shows the distribution of sample means. The orange line represents the theoretical mean and the green line represents the sample mean. The lines are virtually on top of one another, further reinforcing the applicability of the Central Limit Theorem to the distribution of the sample means.
+
+```{r Mean Histogram}
+qplot(simmeans, geom = "histogram", binwidth = 0.25, main = "Distribution of Sample Means",
+      xlab = "Mean Value", ylab = "Count", fill = I("skyblue"), col = I("magenta")) +
+    geom_vline(aes(xintercept = 5), col= "orange", size = 0.5) +
+    geom_vline(aes(xintercept = mean(simmeans)), col= "green", size = 0.5) +
+    theme(plot.title = element_text(hjust = 0.5))
+```
+
+### 3. Sample Variance vs. Theoretical Variance
+
+We can similarly compare the sample variance with the theoretical variance. The theoretical variance of the samples would be calculated using the theoretical variance of the exponential distribution, 1/$\lambda$^2, and the size of each sample, which is 40. The theoretical sample variance is equal to $\frac{1/$\lambda$^2}{$\sqrt{n}}$$. The resulting value is below.
+```{r theoretical variance, results='asis'}
+theovar <- (1/0.2)/sqrt(40)
+```
+
+
+\pagebreak
+
+# Appendix A: R code used in analysis
+
+```{r code appendix, echo = TRUE, results='hide', fig.keep='none'}
+set.seed(35)
+simdata <- matrix(data = NA, nrow = 1000, ncol = 40)
+for (i in 1:1000) {simdata[i, ] <- rexp(40, 0.2)}
+head(simdata[, 1:5])
+simmeans <- apply(simdata, 1, mean)
+simvars <- apply(simdata, 1, var)
+samplemean <- mean(simmeans)
+qplot(simmeans, geom = "histogram", binwidth = 0.25, main = "Distribution of Sample Means",
+      xlab = "Mean Value", ylab = "Count", fill = I("skyblue"), col = I("magenta")) +
+    geom_vline(aes(xintercept = 5), col= "orange", size = 0.5) +
+    geom_vline(aes(xintercept = mean(simmeans)), col= "green", size = 0.5) +
+    theme(plot.title = element_text(hjust = 0.5))
+samplevar <- var(simmeans)
+```
+
