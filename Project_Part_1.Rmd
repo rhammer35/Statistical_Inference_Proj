@@ -10,7 +10,6 @@ knitr::opts_chunk$set(echo = FALSE, results = "hide")
 suppressWarnings(library(ggplot2))
 ```
 ## Project Overview
-
 Welcome to Part 1 of the course project in the Statistical Inference course that is part of the Data Science Specialization through Johns Hopkins University in Coursera. For this portion of the project, a simulation exercise will be performed in R to investigate the exponential probability distribution and compare it to the Central Limit Theorem. To do said comparison, we will view the simulated mean, variance, and distribution with the theoretical versions of those same three characteristics for a given lambda value.
 
 ### 1. Simulations
@@ -36,33 +35,62 @@ simmeans <- apply(simdata, 1, mean)
 simvars <- apply(simdata, 1, var)
 ```
 
-
 ### 2. Sample Mean vs. Theoretical Mean
+The first question we are exploring is "How does the sample mean compare with the theoretical mean predicted by the Central Limit Theorem?" The theoretical mean for an exponential distribution is equal to the value of $\frac{1}{\lambda}$. As we are using a $\lambda$ value of 0.2, our theoretical mean, or $\mu$, is equal to 5. The sample mean is calculated by applying the mean() function to the vector "simmeans", which contains the means for each simulation of 40 random exponential variables. That process yeilds a resulting mean of 
 
-The theoretical mean for an exponential distribution is equal to the value of 1/$\lambda$. As we are using a $\lambda$ value of 0.2, our theoretical mean, or $\mu$, is equal to 5. The sample mean is calculated by applying the mean function to the vector "simmeans", which contains the means for each simulation of 40 random exponential variables.
-
-```{r sample mean, results = 'asis'}
+```{r sample mean, results='hold'}
 samplemean <- mean(simmeans)
+print(samplemean)
 ```
 
-The sample mean of 4.988198 is extremely close to the theoretical mean of $\lambda$ = 5. This should not be surprising, as the Central Limit Theorem states that for a large number of samples, the distribution of sample means should be approximately normal with center at the population (or in this case, theoretical) mean. The histogram below shows the distribution of sample means. The orange line represents the theoretical mean and the green line represents the sample mean. The lines are virtually on top of one another, further reinforcing the applicability of the Central Limit Theorem to the distribution of the sample means.
+The sample mean of 4.988198 is extremely close to the theoretical mean of $\mu$ = 5. This should not be surprising, as the Central Limit Theorem states that for a large number of samples, the distribution of sample means should be approximately normal with center at the population (or in this case, theoretical) mean. The histogram in Figure 1 shows the distribution of sample means. The orange line represents the theoretical mean and the green line represents the sample mean. The lines are virtually on top of one another, further reinforcing the applicability of the Central Limit Theorem to the distribution of the sample means.
 
-```{r Mean Histogram}
-qplot(simmeans, geom = "histogram", binwidth = 0.25, main = "Distribution of Sample Means",
-      xlab = "Mean Value", ylab = "Count", fill = I("skyblue"), col = I("magenta")) +
+```{r Mean Histogram, fig.cap= "Sample Mean vs. Theoretical Mean", fig.height=2.4, fig.width=4}
+qplot(simmeans, geom = "histogram", binwidth = 0.25, xlab = "Mean Value",
+      main = "Distribution of Sample Means", ylab = "Count", fill = I("skyblue"), 
+      col = I("magenta")) +
     geom_vline(aes(xintercept = 5), col= "orange", size = 0.5) +
     geom_vline(aes(xintercept = mean(simmeans)), col= "green", size = 0.5) +
     theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ### 3. Sample Variance vs. Theoretical Variance
+We can similarly compare the sample variance with the theoretical variance predicted by the Central Limit Theorem. The theoretical variance of the samples would be calculated using the theoretical variance of the exponential distribution, $\frac{1}{\lambda^2}$, and the size of each sample, which is 40. The theoretical sample variance is equal to $\frac{\frac{1}{\lambda^2}}{n}$. I can find the sample variance using R's var() function to calculate the variance of my sample means. The results of both calcuations are below.
 
-We can similarly compare the sample variance with the theoretical variance. The theoretical variance of the samples would be calculated using the theoretical variance of the exponential distribution, 1/$\lambda$^2, and the size of each sample, which is 40. The theoretical sample variance is equal to $\frac{1/$\lambda$^2}{$\sqrt{n}}$$. The resulting value is below.
-```{r theoretical variance, results='asis'}
-theovar <- (1/0.2)/sqrt(40)
+```{r theoretical and sample variance, results='hold'}
+theovar <- (1/0.2^2)/40
+samplevar <- var(simmeans)
+varsent1 <- paste("The theoretical variance is ", theovar, ".", sep = "")
+varsent2 <- paste("The sample variance is ", samplevar, ".", sep = "")
+noquote(c(varsent1, varsent2))
+```
+
+These values are nearly identical! Again, the validity of applying the Central Limit Theorem is confirmed by the results of our simulated data and subsequent calculations.
+For a visual confirmation of this idea, we can return to the same distribution of sample means from before. Figure 2 above has the values of one sample standard deviation from the sample mean and one theoretical standard deviation from the sample mean overlayed to further demonstrate how close these values are to one another. Again, the sample values are in orange, and the theoretical in green. The standard deviation, or the standard error of sampling distributions, is calculated by taking the square root of the variance.
+
+```{r variance histogram, fig.cap= "Sample Variance vs. Theoretical Variance", fig.height=2.4, fig.width=4, results='hold'}
+theosigma <- sqrt(theovar)
+samplesigma <- sqrt(samplevar)
+qplot(simmeans, geom = "histogram", binwidth = 0.25, xlab = "Mean Value",
+      main = "Distribution of Sample Means", ylab = "Density",
+      fill = I("skyblue"), col = I("magenta")) +
+    geom_vline(aes(xintercept = samplemean+c(-1, 1)*theosigma), col= "green", size = 0.5) +
+    geom_vline(aes(xintercept = samplemean+c(-1, 1)*samplesigma), col= "orange", size = 0.5) +
+    geom_vline(aes(xintercept = mean(simmeans)), col= "black", size = 1, linetype = "dotted") +
+    theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
+```{r normal histogram, fig.cap="Normality of Distribution", fig.height=2.4, fig.width=4, fig.align = "center"}
+sigmavec <- c(-2, -1, 1, 2)*samplesigma
+qplot(simmeans, y = ..density.., geom = "histogram", binwidth = 0.25, xlab = "Mean Value",
+      main = "Distribution of Sample Means", ylab = "Count",
+      fill = I("skyblue"), col = I("magenta")) +
+    geom_density(aes(x = simmeans, y=..density..)) +
+    geom_vline(aes(xintercept = samplemean+sigmavec), col= "orange", size = 0.5) +
+    geom_vline(aes(xintercept = mean(simmeans)), col= "black", size = 1, linetype = "dotted") +
+    theme(plot.title = element_text(hjust = 0.5))
+```
 \pagebreak
 
 # Appendix A: R code used in analysis
