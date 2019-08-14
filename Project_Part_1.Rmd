@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = FALSE, results = "hide")
 ```
 ```{r packages}
 suppressWarnings(library(ggplot2))
+suppressWarnings(library(knitr))
 ```
 ## Project Overview
 Welcome to Part 1 of the course project in the Statistical Inference course that is part of the Data Science Specialization through Johns Hopkins University in Coursera. For this portion of the project, a simulation exercise will be performed in R to investigate the exponential probability distribution and compare it to the Central Limit Theorem. To do said comparison, we will view the simulated mean, variance, and distribution with the theoretical versions of those same three characteristics for a given lambda value.
@@ -22,10 +23,10 @@ simdata <- matrix(data = NA, nrow = 1000, ncol = 40)
 for (i in 1:1000) {simdata[i, ] <- rexp(40, 0.2)}
 ```
 
-Here is a view of the first few rows and columns of the resulting simulated matrix:
+Here is a view of the first five rows and columns of the resulting simulated matrix:
 
 ```{r data preview, results = 'hold'}
-head(simdata[, 1:5])
+kable(simdata[1:5, 1:5])
 ```
 
 Next, I take the mean and variance of each row of the matrix and store those values in vectors called "simmeans" and "simvars" respectively. These represent means and variances for each sample of 40 simulated random variables. The distribution of the means will become the focus of the analysis and comparison. I am storing the variances for later reference.
@@ -80,7 +81,26 @@ qplot(simmeans, geom = "histogram", binwidth = 0.25, xlab = "Mean Value",
     theme(plot.title = element_text(hjust = 0.5))
 ```
 
+### 4. Distribution
 
+The final question we would like to answer is "Is the distribution of sample means approximately normal?" To do this we will focus on the location of specific quantiles in the data and the appearance of the distribution. Normal distributions are symmetric about their median, with half the data falling on either side. This leads to the mean being equal to the median. Additionally, approximately 68% of the data should fall within one standard deviation of the mean/median, and about 95% of the data should fall within two standard deviations of the mean. We have already caluclated a sample mean of 4.988. The sample standard deviation, as mentioned above, is equal to the square root of the sample variance, which for the sample data here is $\sqrt{0.6381}$ = 
+```{r sample standard deviation, results='asis'}
+cat(samplesigma)
+```
+Now, we can use the quantile function to view the cutoff points for the median of the data, and the points corresponding to the middle 68% and middle 95% of the data. These values are shown in the first row of the table below. The second row represents the cutoff points within one and two standard deviations of the mean. The mean is the middle value, with the two values before it corresponding to two standard deviations below the mean and the latter two values being those above the mean.
+```{r quantile calculations, results='hold'}
+quant1 <- quantile(simmeans, c(0.025, 0.16, 0.5, 0.84, 0.975))
+quant1 <- round(quant1, 4)
+quantlabels <- c("2.5th Percentil", "16th Percentile", "Median", "84th Percentile", "97.5th Percentile")
+quant2 <- c(-2*samplesigma+samplemean, -1*samplesigma+samplemean, samplemean, 1*samplesigma+samplemean, 2*samplesigma+samplemean)
+quant2 <- round(quant2, 4)
+quantdf <- as.data.frame(rbind(quant1, quant2))
+colnames(quantdf) <- quantlabels
+rownames(quantdf) <- c("Sample Quantiles", "Standard Deviation Cutoffs")
+kable(quantdf)
+```
+
+The values are extremely close to one another, demonstrating a high level of normality in the distribution of the sample means. Again this matches what we would expect from the Central Limit Theorem, which predicts normality of a distribution of sample means for large enough sample sizes. Further evidence of this is seen in Figure 3, which uses a density curve overlaid on the histogram of the sample mean distribution. The vertical axis here has been changed to reflect density of the distribution rather than a simple count; however, this did not change the shape of the distribution.
 ```{r normal histogram, fig.cap="Normality of Distribution", fig.height=2.4, fig.width=4, fig.align = "center"}
 sigmavec <- c(-2, -1, 1, 2)*samplesigma
 qplot(simmeans, y = ..density.., geom = "histogram", binwidth = 0.25, xlab = "Mean Value",
