@@ -1,0 +1,71 @@
+---
+title: "Project Part 2: A Study on the Effect of Delivery and Dosage on Tooth Growth in Guinea Pigs"
+author: "Ryan Hammer"
+output:
+    pdf_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, results = "hold")
+```
+```{r packages, message=FALSE}
+suppressWarnings(library(ggplot2))
+suppressWarnings(library(tidyverse))
+suppressWarnings(library(knitr))
+suppressWarnings(library(pastecs))
+```
+
+### Introduction
+
+This second part of the course project in the Coursera Statistical Inference course involves analyzing the ToothGrowth data set that comes built in to R. The data set results from a study on the effect of vitamin C on tooth growth in 60 guinea pigs. Ultimately we would like to answer the question
+
+_Do delivery and/or dosage affect the level of tooth growth in guinea pigs?_
+
+### Data Summary
+
+We begin by loading the data set into a data frame and looking at a summary using R's str() function, the results of which are below.
+```{r ToothGrowth}
+toothdata <- tbl_df(ToothGrowth)
+str(toothdata)
+```
+
+We can see that there are three variables in the data, len for tooth length, supp for supplement type, and dose for the numeric dose of vitamin C given to the test subjects. Supplement type is a factor variable showing whether the vitamin C was administered using orange juice or ascorbic acid, while tooth length and dose are numeric variables measured in length of odontoblasts and milligrams/day, respectively.
+Using the n_distinct() function from the dplyr R package reveals that the dose variable only has three different values in the data, and using the unique() reveals them to be 0.5, 1.0, and 2.0 mg/day.
+```{r dose variable info1, echo = TRUE}
+n_distinct(toothdata$dose)
+```
+```{r dose variable info2, echo = TRUE}
+unique(toothdata$dose)
+```
+
+With this in mind, we can get an idea of what the data looks like with some general summary calculations and data visualizations. The table below shows the mean and median length for each supplement type for each dose.
+```{r tooth length summary}
+lengthsummary <- toothdata %>% group_by(supp, dose) %>% summarize(Mean = mean(len), Median = median(len))
+lengthsummary <- rename(lengthsummary, Supp_Type = supp, Dose = dose)
+kable(lengthsummary)
+```
+
+The table shows that the means and medians for the length variable increase for both supplements as the dose level rises. For doses of 0.5 and 1.0 milligrams per day, the mean and median length of odontoplasts is larger using orange juice to supplement vitamin C. 
+We can further explore the length data through plotting. Figure 1 below shows boxplots of the length variable for each dose amount separated by supplement type. 
+```{r ToothGrowth boxplot, fig.height=3.5, fig.width=5, fig.align='center', fig.show='asis', fig.cap="Tooth Length Boxplots", fig.pos="h"}
+qplot(x=as.factor(dose), y=len, data = toothdata, geom = "boxplot", fill = supp, xlab = "Dose", ylab = "Length")
+```
+The figure appears reinforce what is seen in the table. There seems to be a trend of larger doses leading to higher lengths for both supplement types. It does also appear that for lower doses there is a more pronounced growth when the vitamin C was administered using orange juice as opposed to using ascorbic acid.
+We can test the significance of the effects of supplement and dosage using T hypothesis tests. Before starting that process, we should check the normality of the data. A histogram of all 60 observations of the length variable is shown below in Figure 2. 
+```{r ToothGrowth hist, fig.height=2.4, fig.width=4, fig.align='center', fig.show='asis', fig.cap="Tooth Lengths", fig.pos="h"}
+qplot(len, data = toothdata, binwidth = 5, xlab = "Length", ylab = "Count", fill = I("goldenrod1"), col = I("green4"))
+```
+
+The distribution of lengths shown by the plot is not perfectly normal, but does tend to cluster around its center while thinning out on either end. A further test for normality can be down using a Shapiro-Wilk Test. Using the stat.desc() function in the pastecs package in R, the Shapiro-Wilk probability is p = 
+```{r shapiro-wilk test, results='asis'}
+cat(stat.desc(toothdata$len, norm = TRUE)[20])
+```
+. The alpha value used in test was 0.05. The Shapiro-Wilk Test states that the null hypothesis, that the data in question is normally distributed, should be rejected for probability values lower than alpha. Thus, the assumption that the tooth length data is normally distributed is reasonable, and we can validly apply T hypothesis tests.
+
+### Hypothesis Tests
+
+
+ 
+
+
