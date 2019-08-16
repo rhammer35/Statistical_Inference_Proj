@@ -15,7 +15,7 @@ Welcome to Part 1 of the course project in the Statistical Inference course that
 
 ### 1. Simulations
 To begin, we will need to run 1000 simulations of 40 exponential random variables. The assignment requires using a lambda ($\lambda$) value of 0.2 for the randomized data, and then calculating the mean for each sample of size 40. The distribution of those sample means will then be used in the comparison with the Central Limit Theorem. It should be noted that the exponential distribution is related to the geometric distribution, which is a measure of the number of binomial trials required to achieve a single success. The exponential distribution is the continuous version of the discrete geometric distribution.
-For the simulation in R, I use the rexp() function to generate exponential random variables. I am also employing the set.seed() function to make my results reproducible. Then, I use a for() loop to create a matrix storing each simulation of 40 random exponentials to a single row for a total of 1000 rows. The code for that, and all other R commands, can be found in the Appendix.
+For the simulation in R, the rexp() function can be used to generate exponential random variables. We utilize the set.seed() function to make the results reproducible. Then, a for() loop can be employed to create a matrix storing each simulation of 40 random exponentials to a single row for a total of 1000 rows. The code for that, and all other R commands, can be found in the Appendix.
 
 ```{r simulation}
 set.seed(35)
@@ -28,7 +28,7 @@ Here is a view of the first five rows and columns of the resulting simulated mat
 kable(simdata[1:5, 1:5])
 ```
 
-Next, I take the mean and variance of each row of the matrix and store those values in a vector called "simmeans." These represent means for each sample of 40 simulated random variables. The distribution of the means will become the focus of the analysis and comparison.
+Next, we take the mean and variance of each row of the matrix and store those values in a vector called "simmeans." These represent means for each sample of 40 simulated random variables. The distribution of the means will become the focus of the analysis and comparison.
 
 ```{r calculations}
 simmeans <- apply(simdata, 1, mean)
@@ -112,7 +112,7 @@ qplot(simmeans, y = ..density.., geom = "histogram", binwidth = 0.25, xlab = "Me
 Though exponentially distributed data are not normally distributed, the Central Limit Theorem states that means of samples taken from data matching an exponential distribution would be approximately normal, assuming large enough sample sizes. Using a simulation of 1000 samples of 40 exponential random variables, we have seen that the mean, variance, and quantile distribution of those samples are extremely close to the corresponding theoretical values predicted by the Central Limit Theorem, seeming to strongly confirm its applicability. 
 \pagebreak
 
-# Appendix A: R code used in analysis
+# Appendix: R code used in analysis
 
 ```{r code appendix, echo = TRUE, results='hide', fig.keep='none'}
 suppressWarnings(library(ggplot2))
