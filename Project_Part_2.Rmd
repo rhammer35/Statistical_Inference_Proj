@@ -59,13 +59,82 @@ qplot(len, data = toothdata, binwidth = 5, xlab = "Length", ylab = "Count", fill
 
 The distribution of lengths shown by the plot is not perfectly normal, but does tend to cluster around its center while thinning out on either end. A further test for normality can be down using a Shapiro-Wilk Test. Using the stat.desc() function in the pastecs package in R, the Shapiro-Wilk probability is p = 
 ```{r shapiro-wilk test, results='asis'}
-cat(stat.desc(toothdata$len, norm = TRUE)[20])
+a <- round((stat.desc(toothdata$len, norm = TRUE)[20]), 4)
+cat(a)
 ```
-. The alpha value used in test was 0.05. The Shapiro-Wilk Test states that the null hypothesis, that the data in question is normally distributed, should be rejected for probability values lower than alpha. Thus, the assumption that the tooth length data is normally distributed is reasonable, and we can validly apply T hypothesis tests.
+The alpha value used in test was 0.05. The Shapiro-Wilk Test states that the null hypothesis, that the data in question is normally distributed, should be rejected for probability values lower than alpha. Thus, the assumption that the tooth length data is normally distributed is reasonable, and we can validly apply T hypothesis tests.
 
 ### Hypothesis Tests
 
+To attempt to answer the question previously posed in the introduction, it will be necessary to perform hypothesis tests related to the effects of supplement type and dosage amount. First, we will test supplement type. The null hypothesis will be that supplement type does not affect tooth growth length. We will test this by assuming the difference between the mean values for each supplement type is equal to 0. The althernative hypothesis will be that there is a difference between the two mean values. In the data set, 30 obesrvations were given vitamin C using orange juice, and the other 30 using ascorbic acid. The code below will separate the original data by supplement type, then perform a two-sided T test on the two sets of length data.
+```{r supplement t test, echo = TRUE}
+ojdata <- tbl_df(filter(toothdata, supp == "OJ"))
+vcdata <- tbl_df(filter(toothdata, supp == "VC"))
+t.test(ojdata$len, vcdata$len, conf.level = 0.95)$p.value
+```
+Using $\alpha$ = 0.05 and assuming unequal variances, the test produces a p value of 0.0606. Because p > $\alpha$, we fail to reject the null hypothesis based on the T hypothesis test.
+Recall the appearance of the boxplot in Figure 1; for the two lower dosage values, there did appear to be a difference in the tooth lengths for each supplement type. To further explore this, we can perform T hypothesis tests separating the length data by both dosage and supplement type. Because this will involve multiple hypothesis tests on the same data, it becomes necessary to use a correction method to control for errors that may arise due to multiple testing. The method used here will be the "BH" method for correcting the False Discovery Error Rate (FDAR) seen in week of the course.
+The R code below shows creation of data subsets based on dosage and type.
+```{r supplement and dose subsets, echo=TRUE, results='hide'}
+oj0.5 <- filter(toothdata, supp == "OJ") %>% filter(dose == 0.5) %>% tbl_df()
+vc0.5 <- filter(toothdata, supp == "VC") %>% filter(dose == 0.5) %>% tbl_df()
+oj1 <- filter(toothdata, supp == "OJ") %>% filter(dose == 1.0) %>% tbl_df()
+vc1 <- filter(toothdata, supp == "VC") %>% filter(dose == 1.0) %>% tbl_df()
+oj2 <- filter(toothdata, supp == "OJ") %>% filter(dose == 2.0) %>% tbl_df()
+vc2 <- filter(toothdata, supp == "VC") %>% filter(dose == 2.0) %>% tbl_df()
+```
+Now we can use the subsets to run T tests comparing supplement type on each dosage level and place the results in a vector of p values, including the original p value determined above. Those p values are then run through R's p.adjust() function using the BH correction method to determine how many p values meet a level allowing for rejection of the null hypothesis. The null hypothesis for each test is that the difference between means for each supplement type is zero. The result of those calculations are in the table below.
+```{r p values corrected}
+pvector <- t.test(ojdata$len, vcdata$len, conf.level = 0.95)$p.value
+pvector[2] <- t.test(oj0.5$len, vc0.5$len, conf.level = 0.95)$p.value
+pvector[3] <- t.test(oj1$len, vc1$len, conf.level = 0.95)$p.value
+pvector[4] <- t.test(oj2$len, vc2$len, conf.level = 0.95)$p.value
+pvalsdf <- data.frame(NA)
+pvalsdf[1, 1:4] <- p.adjust(pvector, method = "BH")
+colnames(pvalsdf) <- c("Supp_overall", "Supp_0.5", "Supp_1.0", "Supp_2.0")
+kable(pvalsdf)
+```
 
- 
+### Conclusions
 
+Using $\alpha$ = 0.5 and the "BH" FDAR correction method due to multiple testing, we are able to reject the null hypothesis that mean tooth lengths for each supplement type are the same for dosage levels of 0.5 and 1.0 mg/day. The T tests were two-tailed, and conducted under the assumptions that the distribution of tooth lengths was approximately normal, and that variances between groups were unequal.
 
+\pagebreak
+
+# Appendix
+```{r code appendix, echo = TRUE, results = 'hide', message=FALSE, fig.keep = 'none'}
+suppressWarnings(library(ggplot2))
+suppressWarnings(library(tidyverse))
+suppressWarnings(library(knitr))
+suppressWarnings(library(pastecs))
+toothdata <- tbl_df(ToothGrowth)
+str(toothdata)
+n_distinct(toothdata$dose)
+unique(toothdata$dose)
+lengthsummary <- toothdata %>% group_by(supp, dose) %>% 
+    summarize(Mean = mean(len), Median = median(len))
+lengthsummary <- rename(lengthsummary, Supp_Type = supp, Dose = dose)
+kable(lengthsummary)
+qplot(x=as.factor(dose), y=len, data = toothdata, geom = "boxplot",
+      fill = supp, xlab = "Dose", ylab = "Length")
+qplot(len, data = toothdata, binwidth = 5, xlab = "Length",
+      ylab = "Count", fill = I("goldenrod1"), col = I("green4"))
+a <- round((stat.desc(toothdata$len, norm = TRUE)[20]), 4)
+cat(a)
+ojdata <- tbl_df(filter(toothdata, supp == "OJ"))
+vcdata <- tbl_df(filter(toothdata, supp == "VC"))
+t.test(ojdata$len, vcdata$len, conf.level = 0.95)$p.value
+oj0.5 <- filter(toothdata, supp == "OJ") %>% filter(dose == 0.5) %>% tbl_df()
+vc0.5 <- filter(toothdata, supp == "VC") %>% filter(dose == 0.5) %>% tbl_df()
+oj1 <- filter(toothdata, supp == "OJ") %>% filter(dose == 1.0) %>% tbl_df()
+vc1 <- filter(toothdata, supp == "VC") %>% filter(dose == 1.0) %>% tbl_df()
+oj2 <- filter(toothdata, supp == "OJ") %>% filter(dose == 2.0) %>% tbl_df()
+vc2 <- filter(toothdata, supp == "VC") %>% filter(dose == 2.0) %>% tbl_df()
+pvector <- t.test(ojdata$len, vcdata$len, conf.level = 0.95)$p.value
+pvector[2] <- t.test(oj0.5$len, vc0.5$len, conf.level = 0.95)$p.value
+pvector[3] <- t.test(oj1$len, vc1$len, conf.level = 0.95)$p.value
+pvector[4] <- t.test(oj2$len, vc2$len, conf.level = 0.95)$p.value
+pvalsdf <- data.frame(NA)
+pvalsdf[1, 1:4] <- p.adjust(pvector, method = "BH")
+colnames(pvalsdf) <- c("Supp_overall", "Supp_0.5", "Supp_1.0", "Supp_2.0")
+kable(pvalsdf)
